@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional
+from typing import Optional, TextIO
 from datetime import datetime, timezone
 from hashlib import sha256
 
@@ -10,12 +10,40 @@ def _hash_content(content: str) -> str:
     return sha256(content.encode("utf-8")).hexdigest()
 
 
-def _load_snapshot(path: Path, load_content: bool) -> dict[str, str]:
-    ...
+def _load_snapshot(file: TextIO, load_content: bool) -> dict[str, str]:
+    data = {}
+    state = "start"
+    content = []
 
+    for line in file:
+        match state:
 
-def _dump_snapshot(snapshot: Snapshot) -> str:
-    ...
+            case "start":
+                if line.rstrip() != '---':
+                    raise ValueError("Snapshots must start with delimiter")
+                state = "header"
+
+            case "header":
+                line = line.rstrip()
+                if line == '---':
+                    if not load_content:
+                        return data
+                    else:
+                        state = "content"
+                        continue
+
+                key, value = line.split(": ")
+                data[key] = value
+
+            case "content":
+                if line == '---':
+                    # Need to remove hash so __init__ doesn't get angry.
+                    data.pop("hash")
+                    data["content"] = ( ''.join(content) ).removesuffix('\n')
+                    return data
+                content.append(line)
+
+    raise ValueError("Poorly Formatted snapshot file.")
 
 
 class Snapshot:
@@ -91,9 +119,30 @@ class Snapshot:
             path: the location of the snapshot file.
             load_content: flag that determines if file content will be loaded, or just the hash.
         """
-        return cls(**_load_snapshot(path, load_content))
+        with path.open("r") as file:
+            data = _load_snapshot(file, load_content)
+        return cls(**data)
 
 
     def save_to(self, path: Path) -> None:
-        path.write_text(_dump_snapshot(self))
+        """
+        Saves a snapshot to a file path.
+
+        Args:
+            path: the location to store the snapshot.
+        """
+        path.write_text(str(self))
+
+
+    def __str__(self) -> str:
+        return '\n'.join([
+            f"---",
+            f"test: {self._test}",
+            f"snap: {self._snap}",
+            f"hash: {self._hash}",
+            f"date: {self._date}",
+            f"---",
+            f"{self._content}",
+            f"---",
+        ])
 
