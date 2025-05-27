@@ -5,6 +5,7 @@ from .core import run_tests, review_snaps
 
 
 def main() -> None:
+    # Construct a parser for the arguments
     parser = ArgumentParser(description="A snapshot test manager.")
     mode = parser.add_subparsers(dest="mode", required=True, help="Must select a mode of operation")
 
@@ -16,6 +17,7 @@ def main() -> None:
     review = mode.add_parser("review", help="Select a directory to review.")
     review.add_argument("directory", type=Path, help="Path to review.")
 
+    # Delegate actual functionality
     match (args := parser.parse_args()).mode:
         case "test":   run_tests(args.directory)
         case "review": review_snaps(args.directory)
