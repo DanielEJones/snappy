@@ -1,0 +1,9 @@
+[project]
+name = "snappy"
+version = "0.1.0"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[project.scripts]
+snappy = "snappy.cli:main"

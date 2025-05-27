@@ -1,2 +1,3 @@
 # snappy
-A small snapshot library.
+A small test framework built around snapshot testing.
+
