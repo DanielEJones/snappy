@@ -72,6 +72,6 @@ class SnapshotStringify(TestCase):
         self.assertEqual(original._hash, loaded["hash"])
         self.assertEqual(original._date, loaded["date"])
 
-        # Content should not appear if not loading 
+        # Content should not appear if not loading
         self.assertNotIn("content", loaded)
 

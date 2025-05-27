@@ -23,11 +23,16 @@ class Test:
             function: the callable that holds test logic.
             snap_directory: the path to the directory snapshots should be save to.
         """
-        self._name, self._function = name, function
+        # These are constants for the lifespan of the test
+        self._name = name
+        self._function = function
         self._snap_directory = snap_directory / name
 
         # Prepare the snapshot directory
         self._snap_directory.mkdir(parents=True, exist_ok=True)
+
+        # Used to track test state / results
+        self._new_snaps: list[str] = []
 
 
     def snap(self, capture_content: str, snap_name: str) -> None:
@@ -59,13 +64,15 @@ class Test:
         # If we get here, either the file doesn't exist or it's different. Either way, save it with
         # the `.snap.new` extension for review later
         snap.save_to(file_path.with_suffix(".snap.new"))
+        self._new_snaps.append(file_path.stem)
 
 
     def _run(self) -> bool:
         # Any calls to snap made with in the function will be recorded
         # and used for test reporting by the suite
+        self._new_snaps = []
         self._function(self)
 
-        # The return value should be calculated from the validity of any
-        # snaps created during the function call
-        return True
+        # If no new snaps were created then it was a 'success'
+        return self._new_snaps == []
+
