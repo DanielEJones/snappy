@@ -12,6 +12,16 @@ class TestSnapshotCreation(TestCase):
     def test_hash_and_content(self) -> None:
         self.assertRaises(ValueError, Snapshot, "test", "test", "content", "hash")
 
+    def test_hash_works_correct(self) -> None:
+        left = Snapshot.new("test1", "test", "hello, world!\n")
+        right = Snapshot.new("test2", "test", "hello, world!\n")
+        self.assertTrue(left == right)
+
+    def test_hash_works_incorrect(self) -> None:
+        left = Snapshot.new("test1", "test", "hello, world!\n\n")
+        right = Snapshot.new("test2", "test", "hello, world!\n")
+        self.assertFalse(left == right)
+
 
 class SnapshotLoader(TestCase):
 

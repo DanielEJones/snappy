@@ -134,6 +134,12 @@ class Snapshot:
         path.write_text(str(self))
 
 
+    def __eq__(self, value: object, /) -> bool:
+        if not isinstance(value, Snapshot):
+            return False
+        return self._hash == value._hash
+
+
     def __str__(self) -> str:
         return '\n'.join([
             f"---",
