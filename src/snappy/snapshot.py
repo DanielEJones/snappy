@@ -121,7 +121,22 @@ class Snapshot:
         """
         with path.open("r") as file:
             data = _load_snapshot(file, load_content)
-        return cls(**data)
+
+        if "content" in data:
+            return cls(
+                test_name = data["test"],
+                snap_name = data["snap"],
+                content = data["content"],
+                date = data["date"]
+            )
+
+        else:
+            return cls(
+                test_name = data["test"],
+                snap_name = data["snap"],
+                hash = data["hash"],
+                date = data["date"]
+            )
 
 
     def save_to(self, path: Path) -> None:
