@@ -44,10 +44,38 @@ class TestSuite:
         return test
 
 
-    def run_tests(self) -> None:
+    def run_tests(self, display_func: Callable = print) -> None:
         """
         Executes all tests registered with the suite.
+
+        Args:
+            display_func: The callable that results will be pushed to.
         """
+        snaps_for_review = 0
+        tests_failed = 0
         for test in self._tests:
-            test._run()
+            display_func(f"{test._name}:", end=" \t")
+
+            if test._run():
+                display_func("ok.")
+
+            else:
+                tests_failed = tests_failed + 1
+                snaps_for_review = snaps_for_review + len(test._new_snaps)
+                display_func('err!')
+                display_func('\n'.join([
+                    f"  x {snap}" for snap in test._new_snaps
+                ]))
+
+        n_tests = len(self._tests)
+        tests_passed = n_tests - tests_failed
+
+        def plural(n: int, word: str) -> str:
+            return f"1 {word}" if n == 1 else f"{n} {word}s"
+
+        display_func("-----------------------------------")
+        display_func(f"{plural(n_tests, 'test')} ran:")
+        display_func(f"  {plural(tests_passed, 'test')} passed")
+        display_func(f"  {plural(tests_failed, 'test')} failed")
+        display_func(f"  {plural(snaps_for_review, 'new snap')} to review")
 
