@@ -9,7 +9,8 @@ from snappy.test import Test
 
 
 def tester(test: Test) -> None:
-    ...
+    _ = test
+
 
 class TestFileHandling(TestCase):
 
