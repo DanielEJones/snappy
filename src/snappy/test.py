@@ -4,6 +4,7 @@ from typing import Callable
 from pathlib import Path
 
 from .snapshot import Snapshot
+from .report import Report, Status
 
 
 class Test:
@@ -32,7 +33,7 @@ class Test:
         self._snap_directory.mkdir(parents=True, exist_ok=True)
 
         # Used to track test state / results
-        self._new_snaps: list[str] = []
+        self.report = Report(self._name)
 
 
     def snap(self, capture_content: str, snap_name: str) -> None:
@@ -47,6 +48,8 @@ class Test:
         """
         file_path = self._snap_directory / f"{snap_name}.snap"
 
+        snap_report = self.report.get_child_by_path(snap_name)
+
         snap = Snapshot.new(
             test_name = self._name,
             snap_name = snap_name,
@@ -59,20 +62,18 @@ class Test:
             # If the old snap exists, and it matches the current one, we don't have to do anything
             # so simply return early
             if snap == old:
+                snap_report.set_status(Status.OK)
                 return
 
         # If we get here, either the file doesn't exist or it's different. Either way, save it with
         # the `.snap.new` extension for review later
         snap.save_to(file_path.with_suffix(".snap.new"))
-        self._new_snaps.append(file_path.stem)
+        snap_report.set_status(Status.ERR)
 
 
-    def _run(self) -> bool:
+    def _run(self, report: Report) -> None:
         # Any calls to snap made with in the function will be recorded
         # and used for test reporting by the suite
-        self._new_snaps = []
+        self.report = report
         self._function(self)
-
-        # If no new snaps were created then it was a 'success'
-        return self._new_snaps == []
 
