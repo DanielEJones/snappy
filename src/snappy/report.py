@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 from functools import reduce
@@ -19,8 +18,19 @@ SPACER = '  | '
 
 
 class Report:
+    """
+    Represents a hierarchical test structure, where each leaf node represents an assertion.
+    Printed in a pretty format that displays test status and summary, complete with nice ordering
+    and folding completely passing subtests.
+    """
 
     def __init__(self, name: str) -> None:
+        """
+        Creates a new report from a name.
+
+        Args:
+            name: the name you wish the report to be displayed as.
+        """
         self.name: str = name
         self.children: List[Report] = []
 
@@ -28,16 +38,39 @@ class Report:
 
 
     def add_child(self, child: Report) -> Report:
+        """
+        Adds a subtest to the current report. Returns a reference to self so
+        that this method can be chained, enabling neat in-place report construction.
+
+        Args:
+            child: the new subtest to add.
+        """
         self.children.append(child)
         return self
 
 
     def set_status(self, status: Status) -> Report:
+        """
+        Sets the current status to one of Running, Ok or Error. Returns a reference to
+        self so that this method can be chained, enabling neat in-place report construction.
+
+        Args:
+            status: the value to set the status to.
+        """
         self._status = status
         return self
 
 
     def to_lines(self, indentation: int = 0) -> List[str]:
+        """
+        Creates a representation of the report in a list-of-strings format. This will fold
+        fully-passing subtests and sort children in the following priority:
+
+            1. Is folded?
+            2. Height
+            3. Status (OK, ERR, RUNNING)
+            4. Alphabetically
+        """
         indent = SPACER * indentation
 
         if self.is_leaf():
@@ -93,6 +126,18 @@ class Report:
 
 
     def get_child_by_path(self, path: str) -> Report:
+        """
+        Returns a child node found at the given period-delimited path. If a child
+        does not exist at that location, a new node (and all non-existant parents) will
+        be created and a reference returned.
+
+        A call to `report.get_child_by_path("child1.subchild.leaf")` is equivalent to calling
+        `report.get_child_by_name("child1").get_child_by_name("subchild") ...`, except it will
+        create a new node by the name if `get_child_by_name` ever returns None.
+
+        Args:
+            path: A period-deliminated string representing a path through the tree's children.
+        """
         target = self
         for name in path.split('.'):
             node = target.get_child_by_name(name)
